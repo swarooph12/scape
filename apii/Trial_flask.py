@@ -15,15 +15,20 @@ class SteamSearch(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('query', required=True,
                             help='A search term needs to be provided')
-        parser.add_argument('facet', required=True,
-                            help='A search term needs to be provided')
+        parser.add_argument('brand', required=True,
+                            help='A search term needs to be provided')                    
+        
         args = parser.parse_args()
 
         product = parse.urlencode({'query': args.query})
-        brand= parse.urlencode({'facet': args.facet})
+        brand=(parse.urlencode({'brand':args.brand})).split("=")[1]
+        find=product+'+'+brand
+        print(find)
+        
+
+        
            
-        r = requests.get(
-            f'https://www.walmart.com/search/?cat_id=0&{brand}&{product}')
+        r = requests.get(f'https://www.walmart.com/search/?{find}')
         
         
         
@@ -59,11 +64,17 @@ class SteamSearch(Resource):
                                      
                                      p44=p4.string
                 price=p11+p22+p33+p44
+                for desc in soup.findAll('div',{'class':'about-desc'}):
+                    description=[]
+
+                    description.append(desc.find('ul').findAll('li').text)
+
                 print(title,price,brand,rating)                     
             results.append({'title':title,
                            'brand':brand,
                            'rating':rating,
-                          'price':price})
+                          'price':price,
+                          'description':description})
         return results
     
 
@@ -74,7 +85,7 @@ class SteamSearch(Resource):
           
 
 
-api.add_resource(SteamSearch, '/query',methods=['PUT'])
+api.add_resource(SteamSearch, '/query')
 
 if __name__ == '__main__':
     app.run(debug=True)
